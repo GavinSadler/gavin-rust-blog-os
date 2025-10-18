@@ -1,0 +1,9 @@
+{
+    "cursor.cpp.disabledLanguages": [
+        "rust",
+        "markdown",
+        "plaintext",
+        "json",
+        "toml"
+    ]
+}
