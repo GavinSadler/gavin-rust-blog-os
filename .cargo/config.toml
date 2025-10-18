@@ -1,0 +1,19 @@
+
+[unstable]
+# Usually these libs are provided precombiled by rustup, but since we're
+# building from scratch we need to build these ourselves. compiler_builtins is a
+# dependency of core, and we need core
+build-std = ["core", "compiler_builtins"]
+
+# Use rust implementations of memset, memcpy, memcmp, etc. etc. instead of
+# trying to use the C runtime versions that are typically used by default. Make
+# sure to build these
+build-std-features = ["compiler-builtins-mem"]
+
+[build]
+target = "x86_64-blog_os.json"
+
+# Instructs cargo run to delegate its runnning to bootimage when we have no os
+# specified
+[target.'cfg(target_os = "none")']
+runner = "bootimage runner"

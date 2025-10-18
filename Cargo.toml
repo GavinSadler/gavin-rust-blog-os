@@ -3,15 +3,12 @@ name = "gavin-rust-blog-os"
 version = "0.1.0"
 edition = "2024"
 
-[dependencies]
-
-[profile.dev]
-panic = "abort"
-
-[profile.release]
-panic = "abort"
-
 [[bin]]
+# Disable test and bench targets since these bring in the std libs.
+# Rust-analyzer pulls from this target listing
 name = "gavin-rust-blog-os"
 test = false
 bench = false
+
+[dependencies]
+bootloader = "0.9"
