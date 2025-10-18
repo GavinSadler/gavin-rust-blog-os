@@ -1,3 +1,6 @@
+use core::fmt;
+use volatile::Volatile;
+
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
@@ -42,7 +45,8 @@ const BUFFER_WIDTH: usize = 80;
 
 #[repr(transparent)]
 struct Buffer {
-    chars: [[ScreenChar; BUFFER_WIDTH]; BUFFER_HEIGHT],
+    // Mark as volatile so buffer writes don't get optimized away
+    chars: [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
 }
 
 pub struct Writer {
@@ -65,10 +69,10 @@ impl Writer {
 
                 let color_code = self.color_code;
 
-                self.buffer.chars[row][col] = ScreenChar {
+                self.buffer.chars[row][col].write(ScreenChar {
                     ascii_character: byte,
                     color_code: color_code,
-                };
+                });
 
                 self.column_position += 1;
             }
@@ -91,7 +95,16 @@ impl Writer {
     }
 }
 
+impl fmt::Write for Writer {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.write_string(s);
+        Ok(())
+    }
+}
+
 pub fn print_something() {
+    use core::fmt::Write;
+
     let mut writer = Writer {
         column_position: 0,
         color_code: ColorCode::new(Color::Yellow, Color::Black),
@@ -99,6 +112,8 @@ pub fn print_something() {
     };
 
     writer.write_byte(b'H');
-    writer.write_string("ello ");
+    write!(writer, "ello ").unwrap();
     writer.write_string("W😮rld!");
+    write!(writer, "Here are some numbers: {} and {} ", 42, 1.0 / 3.0).unwrap();
+    writer.write_string(" Lots of words Lots of words Lots of words Lots of words Lots of words");
 }

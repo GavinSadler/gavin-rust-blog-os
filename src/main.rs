@@ -10,6 +10,10 @@ use core::panic::PanicInfo;
 // TODO: Write a note about this sfdkl;gjasfd
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
+    unsafe {
+        *(0xb8000 as *mut u16) = 0x4f50;
+    }
+
     loop {}
 }
 
