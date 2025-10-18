@@ -13,7 +13,9 @@ fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
 
-static HELLO: &[u8] = b"Hello world!";
+mod vga_buffer;
+
+// static HELLO: &[u8] = b"Hello world!";
 
 // The real starting point of our program, since we don't have the C runtime to
 // propel us into a main() function. Make sure we extern "C" to remain
@@ -21,15 +23,7 @@ static HELLO: &[u8] = b"Hello world!";
 // 'return' ! instead
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
-    let vga_buffer = 0xb8000 as *mut u8;
-
-    for (i, &byte) in HELLO.iter().enumerate() {
-        unsafe {
-            *vga_buffer.offset(i as isize * 2) = byte;
-            // 0xb = 0b1011, light cyan color
-            *vga_buffer.offset(i as isize * 2 + 1) = 0xb;
-        }
-    }
+    vga_buffer::print_something();
 
     loop {}
 }
