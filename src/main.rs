@@ -10,10 +10,7 @@ use core::panic::PanicInfo;
 // TODO: Write a note about this sfdkl;gjasfd
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
-    unsafe {
-        *(0xb8000 as *mut u16) = 0x4f50;
-    }
-
+    println!("\nPANIC! {}", _info);
     loop {}
 }
 
@@ -27,7 +24,14 @@ mod vga_buffer;
 // 'return' ! instead
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
-    vga_buffer::print_something();
+    print!("Hello, with no newline!");
+    println!("Hello, with a newline!");
+    println!("Hello, with a newline! 😁");
+    println!();
+    print!("O___O");
+
+    #[allow(unconditional_panic)]
+    let x = 5 / 0;
 
     loop {}
 }
