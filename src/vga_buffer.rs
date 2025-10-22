@@ -90,18 +90,6 @@ impl Writer {
         }
     }
 
-    // Writes the given string with the Writer's color state
-    pub fn write_string(&mut self, s: &str) {
-        for byte in s.bytes() {
-            match byte {
-                // Printable ASCII byte or newline
-                0x20..=0x7e | b'\n' => self.write_byte(byte),
-                // Not in the printable ASCII range
-                _ => self.write_byte(0xfe),
-            }
-        }
-    }
-
     // Shifts the buffer up and moves the cursor to the bottom left
     fn new_line(&mut self) {
         // Copy all the characters up 1 row
@@ -131,11 +119,20 @@ impl Writer {
 
 impl fmt::Write for Writer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.write_string(s);
+        for byte in s.bytes() {
+            match byte {
+                // Printable ASCII byte or newline
+                0x20..=0x7e | b'\n' => self.write_byte(byte),
+                // Not in the printable ASCII range
+                _ => self.write_byte(0xfe),
+            }
+        }
         Ok(())
     }
 }
 
+// Lazily populate WRITER, we can't instantiate this statically. Rust doesn't
+// like how ColorCode::new is non-const (I think...)
 lazy_static! {
     pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
         column_position: 0,
@@ -144,6 +141,7 @@ lazy_static! {
     });
 }
 
+// Needs to be public for macros, but can be hidden from docs
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
     WRITER.lock().write_fmt(args).unwrap();
@@ -158,4 +156,28 @@ macro_rules! print {
 macro_rules! println {
     () => ($crate::print!("\n"));
     ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
+}
+
+#[test_case]
+fn test_println_simple() {
+    println!("test_println_simple output");
+}
+
+#[test_case]
+fn test_println_many() {
+    for _ in 0..200 {
+        println!("Test of println output");
+    }
+}
+
+#[test_case]
+fn test_println_output() {
+    let s = "Here is a simple output";
+    println!("{}", s);
+    for (i, c) in s.chars().enumerate() {
+        // Since we do a println, there will be an extra newline. We have to
+        // check BUFFER_HEIGHT - 2
+        let screen_char = WRITER.lock().buffer.chars[BUFFER_HEIGHT - 2][i].read();
+        assert_eq!(char::from(screen_char.ascii_character), c);
+    }
 }
